@@ -16,6 +16,7 @@ class NT2VEC:
         self.knn = knn  # number of neighbors to use in node_attr
         self.p = 1  # node2vec return parameter
         self.q = 1  # node2vec inout parameter
+        self.t = 0.5  # parameter that controls where to sample walks (0 is fully network, 1 is no network)
         self.walks = 10  # number of walks to sample
         self.walk_length = 20  # length of samples
         self.d_graph = defaultdict(dict)
@@ -32,7 +33,7 @@ class NT2VEC:
 
         return similarities, indices
 
-    def precompute_probabilities(self):
+    def precompute_attr_probabilities(self):
 
         d_graph = self.d_graph
         nodes_gen = self.graph.nodes()
@@ -44,8 +45,9 @@ class NT2VEC:
             if self.PROB_KEY not in d_graph[s]:
                 d_graph[s][self.PROB_KEY] = {self.NETWORK_PROB_KEY: {}, self.ATTR_PROB_KEY: {}}
 
-            for node in nn_indices:
-                d_graph[s][self.PROB_KEY][self.ATTR_PROB_KEY]
+            for i in range(len(nn_indices[int(s)])):
+                node = nn_indices[int(s)][i]
+                d_graph[s][self.PROB_KEY][self.ATTR_PROB_KEY][node] = similarities[int(s)][i]
 
 
 

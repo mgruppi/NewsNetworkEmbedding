@@ -16,7 +16,10 @@ def main():
 
     nt = nt2vec.NT2VEC(g, attr)
 
-    nt.precompute_nearest_neighbors()
+    nt.precompute_attr_probabilities()
+
+    for key in nt.d_graph:
+        print(key, nt.d_graph[key][nt.PROB_KEY][nt.ATTR_PROB_KEY])
 
 
 if __name__ == "__main__":
