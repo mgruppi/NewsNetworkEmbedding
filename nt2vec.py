@@ -49,7 +49,7 @@ class NT2VEC:
                 node = nn_indices[int(s)][i]
                 d_attr[s][self.PROB_KEY][node] = similarities[int(s)][i]
 
-    def generate_attr_walk(self):
+    def generate_attr_walks(self):
         d_attr = self.d_attr
         walks = list()
 
@@ -63,6 +63,7 @@ class NT2VEC:
                     probabilities = list(d_attr[walk[-1]][self.PROB_KEY].values())  # list of probabilities
                     walk_to = np.random.choice(destinations, size=1, p=probabilities)[0]  # make a choice
                     walk.append(walk_to)
+                    walk = list(map(str, walk))  # make sure walk contains only strings
                 walks.append(walk)
 
         return walks
