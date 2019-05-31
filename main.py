@@ -5,7 +5,7 @@ import numpy as np
 def main():
     # Read data in
     input_path = "data/news/edge_list.csv"
-    input_attributes = "data/news/source_attributes.txt"
+    input_attributes = "data/news/test.txt"
 
     g = nx.read_weighted_edgelist(input_path)
     attr = []
@@ -20,6 +20,10 @@ def main():
 
     for key in nt.d_graph:
         print(key, nt.d_graph[key][nt.PROB_KEY][nt.ATTR_PROB_KEY])
+
+    w = nt.generate_attr_walk()
+    for walk in w:
+        print(walk)
 
 
 if __name__ == "__main__":
