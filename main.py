@@ -14,7 +14,7 @@ def main():
             line = line.split(",")
             attr.append(np.array(line[1:], dtype=float))
 
-    nt = nt2vec.NT2VEC(g, attr, dim=2)
+    nt = nt2vec.NT2VEC(g, attr, dim=8)
 
     nt.precompute_attr_probabilities()
 
