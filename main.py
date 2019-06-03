@@ -1,6 +1,8 @@
 import networkx as nx
 import nt2vec
 import numpy as np
+from sklearn.manifold import TSNE
+import pandas as pd
 
 def main():
     # Read data in
@@ -14,19 +16,19 @@ def main():
             line = line.split(",")
             attr.append(np.array(line[1:], dtype=float))
 
-    nt = nt2vec.NT2VEC(g, attr, dim=8)
+    nt = nt2vec.NT2VEC(g, attr, dim=100, sg=1, p=1, q=1, t=0.75)
 
     nt.precompute_attr_probabilities()
-
-    for key in nt.d_graph:
-        print(key, nt.d_graph[key][nt.PROB_KEY][nt.ATTR_PROB_KEY])
+    nt.precompute_network_probabilities()
 
     nt.generate_walks()
-    model = nt.fit()
+    model = nt.fit(window=10, min_count=1, batch_words=4)
 
     r = model.wv.most_similar('0')
     for v in r:
         print(v)
+
+    model.wv.save_word2vec_format("nt2v_sourcevecs_100_t075.txt")
 
 
 if __name__ == "__main__":

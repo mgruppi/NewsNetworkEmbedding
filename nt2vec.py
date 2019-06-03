@@ -2,7 +2,7 @@ from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 import gensim
-
+import random
 
 class NT2VEC:
 
@@ -21,21 +21,22 @@ class NT2VEC:
     P_KEY = 'p'
     Q_KEY = 'q'
 
-    def __init__(self, graph, attr, dim=10, knn=10, workers=12, num_walks=10, walk_length=40, sampling_strategy=None,
-                 weight_key='weight'):
+    def __init__(self, graph, attr, dim=10, knn=10, workers=12, num_walks=10, walk_length=20, sampling_strategy=None,
+                 weight_key='weight', sg=1, p=1, q=1, t=0.5):
         self.graph = graph  # networkX graph
         self.attr = attr  # node attributes
         self.dim = dim  # length of the output vectors
         self.knn = knn  # number of neighbors to use in node_attr
-        self.p = 1  # node2vec return parameter
-        self.q = 1  # node2vec inout parameter
-        self.t = 0.5  # parameter that controls where to sample walks (0 is fully network, 1 is no network)
+        self.p = p  # node2vec return parameter
+        self.q = q  # node2vec inout parameter
+        self.t = t  # parameter that controls where to sample walks (0 is fully network, 1 is no network)
         self.num_walks = num_walks  # number of walks to sample
         self.walk_length = walk_length  # length of samples
         self.walks = list()
         self.weight_key = weight_key
         self.d_graph = defaultdict(dict)
         self.d_attr = defaultdict(dict)
+        self.sg=sg
 
         self.workers = workers
 
@@ -73,6 +74,7 @@ class NT2VEC:
                 node = nn_indices[int(s)][i]
                 d_attr[s][self.PROB_KEY][node] = similarities[int(s)][i]
 
+    # Node2Vec NODES
     def precompute_network_probabilities(self):
 
         d_graph = self.d_graph
@@ -130,6 +132,29 @@ class NT2VEC:
                 # Save neighbors
                 d_graph[current_node][self.NEIGHBORS_KEY] = d_neighbors
 
+    def generate_single_network_walk(self, source):
+
+        walk = [source]
+        d_graph = self.d_graph
+        while len(walk) < self.walk_length:
+            walk_options = d_graph[walk[-1]].get(self.NEIGHBORS_KEY, None)
+
+            # Skip dead end nodes
+            if not walk_options:
+                break
+
+            if len(walk) == 1:  # For the first step
+                probabilities = d_graph[walk[-1]][self.FIRST_TRAVEL_KEY]
+                walk_to = np.random.choice(walk_options, size=1, p=probabilities)[0]
+            else:
+                probabilities = d_graph[walk[-1]][self.PROBABILITIES_KEY][walk[-2]]
+                walk_to = np.random.choice(walk_options, size=1, p=probabilities)[0]
+
+            walk.append(walk_to)
+        walk = list(map(str, walk))
+
+        return walk
+
     def generate_single_attr_walk(self, source):
         d_attr = self.d_attr
         walk = [source]
@@ -147,8 +172,15 @@ class NT2VEC:
 
     def generate_walks(self):
         for n_walk in range(self.num_walks):
-            for source in self.d_attr:
-                self.walks.append(self.generate_single_attr_walk(source))
+            nodes = list(self.d_attr.keys())
+            random.shuffle(nodes)
+            for source in nodes:
+                choice = np.random.sample(size=1)[0]
+                if choice > self.t:
+                    current_walk = self.generate_single_network_walk(str(source))
+                else:
+                    current_walk = self.generate_single_attr_walk(source)
+                self.walks.append(current_walk)
 
         return self.walks
 
@@ -161,8 +193,10 @@ class NT2VEC:
             skip_gram_params["size"] = self.dim
 
         if 'sg' not in skip_gram_params:
-            skip_gram_params["sg"] = 1  # 1 - use skip-gram; otherwise, use CBOW
+            skip_gram_params["sg"] = self.sg  # 1 - use skip-gram; otherwise, use CBOW
 
+        print(self.walks)
+        print(len(self.walks))
         return gensim.models.Word2Vec(self.walks, **skip_gram_params)
 
 
