@@ -49,7 +49,8 @@ class NT2VEC:
 
         nbrs = NearestNeighbors(n_neighbors=self.knn, algorithm='auto', metric="cosine").fit(self.attr)
         distances, indices = nbrs.kneighbors()  # Gets distances and nearest neighbors
-        similarities = -np.log(distances)  # (1-distances)
+        # similarities = -np.log(distances)  # (1-distances)
+        similarities = 1 - distances
 
         # # normalize similarities into probability
         for i in range(len(similarities)):

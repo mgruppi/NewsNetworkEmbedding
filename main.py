@@ -1,8 +1,7 @@
 import networkx as nx
 import nt2vec
 import numpy as np
-from sklearn.manifold import TSNE
-import pandas as pd
+
 
 def main():
     # Read data in
@@ -16,7 +15,7 @@ def main():
             line = line.split(",")
             attr.append(np.array(line[1:], dtype=float))
 
-    nt = nt2vec.NT2VEC(g, attr, dim=100, sg=1, p=1, q=1, t=0.75)
+    nt = nt2vec.NT2VEC(g, attr, dim=100, sg=1, p=1, q=1, t=0.75, knn=100)
 
     nt.precompute_attr_probabilities()
     nt.precompute_network_probabilities()
