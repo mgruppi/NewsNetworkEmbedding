@@ -4,8 +4,8 @@ import numpy as np
 import gensim
 import random
 
-class NT2VEC:
 
+class NT2VEC:
     PROB_KEY = "probabilities"
     PROBABILITIES_KEY = PROB_KEY
     ATTR_PROB_KEY = "attr"
@@ -21,10 +21,11 @@ class NT2VEC:
     P_KEY = 'p'
     Q_KEY = 'q'
 
-    def __init__(self, graph, attr, dim=10, knn=10, workers=12, num_walks=10, walk_length=20, sampling_strategy=None,
+    def __init__(self, graph, attr, labels=None, dim=10, knn=10, workers=12, num_walks=10, walk_length=20, sampling_strategy=None,
                  weight_key='weight', sg=1, p=1, q=1, t=0.5):
         self.graph = graph  # networkX graph
         self.attr = attr  # node attributes
+        self.labels = labels  # labels for assignment if output must be in terms of names rather than int ids
         self.dim = dim  # length of the output vectors
         self.knn = knn  # number of neighbors to use in node_attr
         self.p = p  # node2vec return parameter
@@ -44,6 +45,7 @@ class NT2VEC:
             self.sampling_strategy = {}
         else:
             self.sampling_strategy = sampling_strategy
+
 
     def precompute_nearest_neighbors(self):
 
@@ -187,6 +189,12 @@ class NT2VEC:
 
     def fit(self, **skip_gram_params):
 
+        print("Pre-computing probabilities...")
+        self.precompute_attr_probabilities()
+        self.precompute_network_probabilities()
+        print("Generating walks...")
+        self.generate_walks()
+
         if 'workers' not in skip_gram_params:
             skip_gram_params['workers'] = self.workers
 
@@ -196,10 +204,14 @@ class NT2VEC:
         if 'sg' not in skip_gram_params:
             skip_gram_params["sg"] = self.sg  # 1 - use skip-gram; otherwise, use CBOW
 
-        print(self.walks)
-        print(len(self.walks))
-        return gensim.models.Word2Vec(self.walks, **skip_gram_params)
-
+        model = gensim.models.Word2Vec(self.walks, **skip_gram_params)
+        if self.labels is None:  # do not need to label output, just return
+            return model
+        else:  # create dictionary with source labels before outputting
+            output = dict()
+            for node in model.wv.vocab:
+                output[self.labels[int(node)].strip()] = model.wv[node]
+            return output
 
 
 
