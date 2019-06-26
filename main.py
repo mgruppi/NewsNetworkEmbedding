@@ -19,7 +19,7 @@ def read_attr_file(path):
     return attr
 
 
-def get_vectors(g, attr, labels=None, dim=40, t=1, p=1, q=1, knn=20):
+def get_vectors(g, attr, labels, dim=40, t=1, p=1, q=1, knn=20):
     nt = nt2vec.NT2VEC(g, attr, labels=labels, sg=1, dim=dim, p=p, q=q, t=t, knn=knn)
 
     model = nt.fit(window=10, min_count=1, batch_words=4)
@@ -30,15 +30,19 @@ def get_vectors(g, attr, labels=None, dim=40, t=1, p=1, q=1, knn=20):
 def main():
     # Read data in
     input_path = "data/news/edge_list.csv"
-    input_attributes = "data/news/source_attributes.csv"
-    label_path =  "data/news/source_labels.csv"
+    input_attributes = "data/news/source_attributes.txt"
+    label_path = "data/news/source_labels.txt"
 
     g = read_edgelist_file(input_path)
     attr = read_attr_file(input_attributes)
     with open(label_path, "r") as fin:
         labels = fin.readlines()
 
-    print(get_vectors(g, attr, labels)["Vox"])
+    print(len(attr))
+
+    out = get_vectors(g, attr, labels)
+    print(out.keys())
+    print(len(out.keys()))
 
 
 if __name__ == "__main__":
