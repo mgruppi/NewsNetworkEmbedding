@@ -21,8 +21,8 @@ class NT2VEC:
     P_KEY = 'p'
     Q_KEY = 'q'
 
-    def __init__(self, graph, attr, labels=None, dim=10, knn=10, workers=12, num_walks=10, walk_length=20, sampling_strategy=None,
-                 weight_key='weight', sg=1, p=1, q=1, t=0.5):
+    def __init__(self, graph, attr, labels=None, dim=200, knn=10, workers=12, num_walks=100, walk_length=50, sampling_strategy=None,
+                 weight_key='weight', sg=1, p=0.4, q=0.3, t=0.3):
         self.graph = graph  # networkX graph
         self.attr = attr  # node attributes
         self.labels = labels  # labels for assignment if output must be in terms of names rather than int ids
@@ -206,7 +206,7 @@ class NT2VEC:
 
         model = gensim.models.Word2Vec(self.walks, **skip_gram_params)
         if self.labels is None:  # do not need to label output, just return
-            return model
+            return model.wv
         else:  # create dictionary with source labels before outputting
             output = dict()
             for node in model.wv.vocab:
